@@ -1,7 +1,7 @@
 const CheckBox = ( { onClick } ) => {
     
     return (
-        <input className="toggle" type="checkbox" onClick = { onClick }/>
+        <input className="toggle" type="checkbox" onClick = { onClick } />
     )
 };
 
