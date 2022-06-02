@@ -1,8 +1,0 @@
-const Button = (props) => {
-
-    return (
-        <button className={props.className} />
-    )
-};
-
-export default Button;
