@@ -7,7 +7,7 @@ import { ACTIONS, getCurrentTime } from '../helpers/actions';
 
 export default class App extends React.Component {
   state = {
-    tasksList: JSON.parse(localStorage.getItem('todos')),
+    tasksList: JSON.parse(localStorage.getItem('todos')) ? JSON.parse(localStorage.getItem('todos')) : [],
 
     filterType: ACTIONS.ALL,
 
