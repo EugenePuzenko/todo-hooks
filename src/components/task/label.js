@@ -1,5 +1,6 @@
 import React from 'react';
-import { formatDistanceToNow } from 'date-fns';
+
+import { getFormatDistanceToNow } from '../helpers/actions';
 
 export default class Label extends React.Component {
   constructor(props) {
@@ -25,10 +26,7 @@ export default class Label extends React.Component {
     return (
       <label>
         <span className="description">{this.props.textContent}</span>
-        <span className="created">
-          {' '}
-          created {formatDistanceToNow(this.state.currentTime, { includeSeconds: true })} ago{' '}
-        </span>
+        <span className="created">created {getFormatDistanceToNow(this.state.currentTime)} ago</span>
       </label>
     );
   }

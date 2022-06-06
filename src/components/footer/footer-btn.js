@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 
 export default class FooterBtn extends React.Component {
   static defaultProps = {
@@ -15,13 +16,18 @@ export default class FooterBtn extends React.Component {
   render() {
     const { btnText, onToggleTab, isSelected, filterFunc } = this.props;
 
+    const isSelectedBtnClass = classNames({
+      ' ': !isSelected,
+      ' selected': isSelected,
+    });
+
     function onClick() {
       onToggleTab();
       filterFunc(btnText);
     }
 
     return (
-      <button className={isSelected ? ' selected' : ''} onClick={onClick}>
+      <button className={isSelectedBtnClass} onClick={onClick}>
         {btnText}
       </button>
     );

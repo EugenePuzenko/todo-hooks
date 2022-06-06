@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 
 import CheckBox from './check-box';
 import Label from './label';
@@ -18,8 +19,13 @@ export default class Task extends React.Component {
   render() {
     const { message, done, onDeleted, onToggleDone, onEdit, createdTime } = this.props;
 
+    const isCompletedClass = classNames({
+      ' ': !done,
+      ' completed': done,
+    });
+
     return (
-      <li className={done ? ' completed' : ' '}>
+      <li className={isCompletedClass}>
         <div className="view">
           <CheckBox onToggleDone={onToggleDone} isChecked={done ? true : false} />
           <Label textContent={message} createdTime={createdTime} />

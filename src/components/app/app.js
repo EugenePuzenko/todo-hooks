@@ -1,20 +1,20 @@
 import React from 'react';
+import { v4 as uuidv4 } from 'uuid';
 
 import Header from '../header/header';
 import Main from '../main/main';
+import { ACTIONS, getCurrentTime } from '../helpers/actions';
 
 export default class App extends React.Component {
-  maxId = 100;
-
   state = {
-    tasksList: [],
+    tasksList: JSON.parse(localStorage.getItem('todos')),
 
-    filterType: 'All',
+    filterType: ACTIONS.ALL,
 
     tabList: [
-      { id: 1, name: 'All', selected: true },
-      { id: 2, name: 'Active', selected: false },
-      { id: 3, name: 'Completed', selected: false },
+      { id: uuidv4(), name: ACTIONS.ALL, selected: true },
+      { id: uuidv4(), name: ACTIONS.ACTIVE, selected: false },
+      { id: uuidv4(), name: ACTIONS.COMPLETED, selected: false },
     ],
   };
 
@@ -30,10 +30,7 @@ export default class App extends React.Component {
     this.setState(({ tasksList }) => {
       if (inputText) {
         return {
-          tasksList: [
-            { id: this.maxId++, message: inputText, done: false, createdTime: new Date().getTime() },
-            ...tasksList,
-          ],
+          tasksList: [{ id: uuidv4(), message: inputText, done: false, createdTime: getCurrentTime() }, ...tasksList],
         };
       } else return;
     });
@@ -79,13 +76,13 @@ export default class App extends React.Component {
   };
 
   getCurrentFilter = () => {
-    if (this.state.filterType === 'All') {
+    if (this.state.filterType === ACTIONS.ALL) {
       return this.state.tasksList;
     }
-    if (this.state.filterType === 'Active') {
+    if (this.state.filterType === ACTIONS.ACTIVE) {
       return this.state.tasksList.filter((el) => !el.done);
     }
-    if (this.state.filterType === 'Completed') {
+    if (this.state.filterType === ACTIONS.COMPLETED) {
       return this.state.tasksList.filter((el) => el.done);
     }
   };
