@@ -26,11 +26,21 @@ export default class App extends React.Component {
     });
   };
 
-  addTask = (inputText) => {
+  addTask = (inputText, timer, timerType) => {
     this.setState(({ tasksList }) => {
       if (inputText) {
         return {
-          tasksList: [{ id: uuidv4(), message: inputText, done: false, createdTime: getCurrentTime() }, ...tasksList],
+          tasksList: [
+            {
+              id: uuidv4(),
+              message: inputText,
+              done: false,
+              createdTime: getCurrentTime(),
+              timer,
+              timerType,
+            },
+            ...tasksList,
+          ],
         };
       } else return;
     });
@@ -133,7 +143,6 @@ export default class App extends React.Component {
 
   render() {
     const todoCount = this.getCount();
-
     return (
       <section className="todoapp">
         <Header onAddTask={this.addTask} />
