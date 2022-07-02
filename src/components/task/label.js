@@ -24,7 +24,17 @@ export default class Label extends React.Component {
   componentDidMount() {
     window.addEventListener('beforeunload', (event) => {
       event.preventDefault();
-      return this.stop();
+      const savedTasks = JSON.parse(localStorage.getItem('todos'));
+      const index = savedTasks.findIndex((el) => el.id === this.state.id);
+      if (index >= 0) {
+        const updatedTask = [
+          ...savedTasks.slice(0, index),
+          { ...savedTasks[index], timer: formatTimer(this.state.currentTimer) },
+          ...savedTasks.slice(index + 1),
+        ];
+
+        localStorage.setItem('todos', JSON.stringify(updatedTask));
+      }
     });
 
     this.createdTimerID = setInterval(() => this.tick(), 1000);
@@ -106,26 +116,15 @@ export default class Label extends React.Component {
   };
 
   stop = () => {
-    const savedTasks = JSON.parse(localStorage.getItem('todos'));
-    const index = savedTasks.findIndex((el) => el.id === this.state.id);
-
-    const updatedTask = [
-      ...savedTasks.slice(0, index),
-      { ...savedTasks[index], timer: formatTimer(this.state.currentTimer) },
-      ...savedTasks.slice(index + 1),
-    ];
-
-    localStorage.setItem('todos', JSON.stringify(updatedTask));
-
     clearInterval(this.increaseTimerID);
     clearInterval(this.decreaseTimerID);
   };
 
   onStartClick = () => {
-    this.start();
     this.setState({
       running: true,
     });
+    this.start();
   };
   onStopClick = () => {
     this.stop();
