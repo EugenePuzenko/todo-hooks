@@ -6,13 +6,19 @@ export default class Label extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      currentTime: this.props.createdTime,
+      createdTime: this.props.createdTime,
       task: this.props.task,
       id: this.props.id,
       currentTimer: this.props.task.timer,
       timerType: this.props.task.timerType,
       running: false,
     };
+  }
+
+  componentDidUpdate() {
+    if (this.props.done) {
+      this.stop();
+    }
   }
 
   componentDidMount() {
@@ -26,7 +32,7 @@ export default class Label extends React.Component {
       this.increaseTimerID = setInterval(() => this.increaseTimer(), 1000);
     }
     if (this.state.timerType === 'decrease') {
-      this.decreaseTimerID = setInterval(() => this.decreaseTime(), 1000);
+      this.decreaseTimerID = setInterval(() => this.decreaseTimer(), 1000);
     }
   }
 
@@ -38,7 +44,7 @@ export default class Label extends React.Component {
 
   tick() {
     this.setState({
-      currentTime: this.props.createdTime,
+      createdTime: this.props.createdTime,
     });
   }
 
@@ -58,7 +64,7 @@ export default class Label extends React.Component {
     });
   }
 
-  decreaseTime() {
+  decreaseTimer() {
     let time = this.state.currentTimer.split(':');
 
     let min = +time[0];
@@ -94,12 +100,9 @@ export default class Label extends React.Component {
 
       if (this.state.timerType === 'decrease') {
         clearInterval(this.decreaseTimerID);
-        this.decreaseTimerID = setInterval(() => this.decreaseTime(), 1000);
+        this.decreaseTimerID = setInterval(() => this.decreaseTimer(), 1000);
       }
     }
-    this.setState({
-      running: true,
-    });
   };
 
   stop = () => {
@@ -114,27 +117,36 @@ export default class Label extends React.Component {
 
     localStorage.setItem('todos', JSON.stringify(updatedTask));
 
-    this.setState({
-      running: false,
-    });
-
     clearInterval(this.increaseTimerID);
     clearInterval(this.decreaseTimerID);
   };
 
+  onStartClick = () => {
+    this.start();
+    this.setState({
+      running: true,
+    });
+  };
+  onStopClick = () => {
+    this.stop();
+    this.setState({
+      running: false,
+    });
+  };
+
   render() {
-    const { currentTimer } = this.state;
-    const { start, stop } = this;
+    const { currentTimer, createdTime } = this.state;
+    const { onStartClick, onStopClick } = this;
 
     return (
       <label>
         <span className="title">{this.props.textContent}</span>
         <span className="description">
-          <button className="icon icon-play" onClick={start}></button>
-          <button className="icon icon-pause" onClick={stop}></button>
+          <button className="icon icon-play" onClick={onStartClick}></button>
+          <button className="icon icon-pause" onClick={onStopClick}></button>
           <span className="time">{formatTimer(currentTimer)}</span>
         </span>
-        <span className="description">created {getFormatDistanceToNow(this.state.currentTime)} ago</span>
+        <span className="description">created {getFormatDistanceToNow(createdTime)} ago</span>
       </label>
     );
   }

@@ -35,6 +35,7 @@ export default class App extends React.Component {
               id: uuidv4(),
               message: inputText,
               done: false,
+              edit: false,
               createdTime: getCurrentTime(),
               timer,
               timerType,
