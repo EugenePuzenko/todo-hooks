@@ -28,6 +28,7 @@ export default class NewTaskForm extends React.Component {
 
   inputSec = (e) => {
     let seconds = e.target.value.replace(/\D/g, '');
+    if (seconds > 59) seconds = 59;
     this.setState({
       sec: seconds,
     });
