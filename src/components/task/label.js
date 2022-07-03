@@ -15,12 +15,6 @@ export default class Label extends React.Component {
     };
   }
 
-  componentDidUpdate() {
-    if (this.props.done) {
-      this.stop();
-    }
-  }
-
   componentDidMount() {
     window.addEventListener('beforeunload', (event) => {
       event.preventDefault();
@@ -121,11 +115,12 @@ export default class Label extends React.Component {
   };
 
   onStartClick = () => {
+    this.start();
     this.setState({
       running: true,
     });
-    this.start();
   };
+
   onStopClick = () => {
     this.stop();
     this.setState({
@@ -136,6 +131,8 @@ export default class Label extends React.Component {
   render() {
     const { currentTimer, createdTime } = this.state;
     const { onStartClick, onStopClick } = this;
+
+    if (this.props.done) this.stop();
 
     return (
       <label>
