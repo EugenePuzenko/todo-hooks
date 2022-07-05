@@ -17,7 +17,8 @@ export default class Task extends React.Component {
   };
 
   render() {
-    const { message, done, onDeleted, onToggleDone, onEdit, createdTime, timer, id, edit } = this.props;
+    const { message, done, onDeleted, onToggleDone, onEdit, createdTime, timer, id, edit, onStartClick, onStopClick } =
+      this.props;
     const task = JSON.parse(localStorage.getItem('todos'))[
       JSON.parse(localStorage.getItem('todos')).findIndex((el) => el.id === id)
     ];
@@ -31,13 +32,15 @@ export default class Task extends React.Component {
         <div className="view">
           <CheckBox onToggleDone={onToggleDone} isChecked={done ? true : false} />
           <Label
-            textContent={message}
+            message={message}
             timer={timer}
             createdTime={createdTime}
             id={id}
             task={task}
             done={done}
             edit={edit}
+            onStartClick={onStartClick}
+            onStopClick={onStopClick}
           />
           <button className="icon icon-edit" onClick={onEdit} />
           <button className="icon icon-destroy" onClick={onDeleted} />

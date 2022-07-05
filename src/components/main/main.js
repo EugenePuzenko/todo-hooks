@@ -17,6 +17,8 @@ export default class Main extends React.Component {
       onEdit,
       onEditInput,
       onSubmitEdit,
+      onStartClick,
+      onStopClick,
     } = this.props;
 
     return (
@@ -28,6 +30,8 @@ export default class Main extends React.Component {
           onEdit={onEdit}
           onEditInput={onEditInput}
           onSubmitEdit={onSubmitEdit}
+          onStartClick={onStartClick}
+          onStopClick={onStopClick}
         />
         <Footer
           todoCount={todoCount}

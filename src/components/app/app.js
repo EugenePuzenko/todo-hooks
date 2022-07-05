@@ -18,7 +18,114 @@ export default class App extends React.Component {
     ],
   };
 
+  componentDidMount() {
+    window.addEventListener('beforeunload', (event) => {
+      event.preventDefault();
+
+      this.setState(({ tasksList }) => {
+        return {
+          tasksList: tasksList.map((task) => ({ ...task, runningTimer: false })),
+        };
+      });
+    });
+  }
+
+  calculateTimer(id, timerType) {
+    this.setState(({ tasksList }) => {
+      const index = tasksList.findIndex((el) => el.id === id);
+      let time = tasksList[index].timer.split(':');
+      let min = +time[0];
+      let sec = +time[1];
+
+      if (timerType === 'increase') {
+        sec += 1;
+        if (sec === 60) {
+          min += 1;
+          sec = 0;
+        }
+      }
+
+      if (timerType === 'decrease') {
+        if (min <= 0 && sec <= 0) {
+          clearInterval(this.decreaseTimerID);
+          min = 0;
+          sec = 0;
+        } else {
+          if (sec >= 1) {
+            sec -= 1;
+          } else {
+            sec = 59;
+          }
+          if (sec === 59) {
+            min -= 1;
+          }
+        }
+      }
+
+      return {
+        tasksList: [
+          ...tasksList.slice(0, index),
+          { ...tasksList[index], timer: min + ':' + sec },
+          ...tasksList.slice(index + 1),
+        ],
+      };
+    });
+  }
+
+  onStartClick = (id) => {
+    const { tasksList } = this.state;
+    const index = tasksList.findIndex((el) => el.id === id);
+    const { timerType, runningTimer } = tasksList[index];
+
+    if (!runningTimer) {
+      if (timerType === 'increase') {
+        this.saveTimerId(id, timerType, index);
+      }
+
+      if (timerType === 'decrease') {
+        this.saveTimerId(id, timerType, index);
+      }
+    }
+
+    this.setState(({ tasksList }) => {
+      return {
+        tasksList: [
+          ...tasksList.slice(0, index),
+          { ...tasksList[index], runningTimer: true },
+          ...tasksList.slice(index + 1),
+        ],
+      };
+    });
+  };
+
+  saveTimerId = (id, timerType, index) => {
+    const timerId = setInterval(() => this.calculateTimer(id, timerType), 1000);
+    this.setState(({ tasksList }) => {
+      return {
+        tasksList: [...tasksList.slice(0, index), { ...tasksList[index], timerId }, ...tasksList.slice(index + 1)],
+      };
+    });
+  };
+
+  onStopClick = (id) => {
+    const { tasksList } = this.state;
+    const index = tasksList.findIndex((el) => el.id === id);
+
+    clearInterval(tasksList[index].timerId);
+
+    this.setState(({ tasksList }) => {
+      return {
+        tasksList: [
+          ...tasksList.slice(0, index),
+          { ...tasksList[index], runningTimer: false },
+          ...tasksList.slice(index + 1),
+        ],
+      };
+    });
+  };
+
   deleteTask = (id) => {
+    this.onStopClick(id);
     this.setState(({ tasksList }) => {
       return {
         tasksList: tasksList.filter((el) => el.id !== id),
@@ -39,6 +146,8 @@ export default class App extends React.Component {
               createdTime: getCurrentTime(),
               timer,
               timerType,
+              timerId: 0,
+              runningTimer: false,
             },
             ...tasksList,
           ],
@@ -48,6 +157,7 @@ export default class App extends React.Component {
   };
 
   onToggleDone = (id) => {
+    this.onStopClick(id);
     this.setState(({ tasksList }) => {
       const index = tasksList.findIndex((el) => el.id === id);
       return {
@@ -159,6 +269,8 @@ export default class App extends React.Component {
           onEdit={this.onEdit}
           onEditInput={this.onEditInput}
           onSubmitEdit={this.onSubmitEdit}
+          onStartClick={this.onStartClick}
+          onStopClick={this.onStopClick}
         />
       </section>
     );

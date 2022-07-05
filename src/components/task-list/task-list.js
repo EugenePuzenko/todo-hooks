@@ -4,7 +4,8 @@ import Task from '../task/task';
 
 export default class TaskList extends React.Component {
   render() {
-    const { onDeleted, onToggleDone, onEdit, onEditInput, onSubmitEdit, getCurrentFilter } = this.props;
+    const { onDeleted, onToggleDone, onEdit, onEditInput, onSubmitEdit, getCurrentFilter, onStartClick, onStopClick } =
+      this.props;
     const filteredTodos = getCurrentFilter();
     localStorage.setItem('todos', JSON.stringify(filteredTodos));
 
@@ -28,6 +29,8 @@ export default class TaskList extends React.Component {
               onToggleDone={() => onToggleDone(id)}
               onEdit={() => onEdit(id)}
               id={id}
+              onStartClick={() => onStartClick(id)}
+              onStopClick={() => onStopClick(id)}
             />
           );
         })}
