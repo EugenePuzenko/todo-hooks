@@ -1,15 +1,25 @@
-import TodoCount from './todo-count';
+import PropTypes from 'prop-types';
+
 import TasksFilter from './tasks-filter';
-import ClearCompleted from './clear-completed';
 
 const Footer = ({ todoCount, clearСompleted, onToggleTab, tabList, filterFunc }) => {
   return (
     <footer className="footer">
-      <TodoCount todoCount={todoCount} />
+      <span className="todo-count"> {todoCount} items left </span>
       <TasksFilter onToggleTab={onToggleTab} tabList={tabList} filterFunc={filterFunc} />
-      <ClearCompleted clearСompleted={clearСompleted} />
+      <button className="clear-completed" onClick={clearСompleted}>
+        Clear completed
+      </button>
     </footer>
   );
+};
+
+Footer.propTypes = {
+  todoCount: PropTypes.number,
+};
+
+Footer.defaultProps = {
+  clearСompleted: () => {},
 };
 
 export default Footer;

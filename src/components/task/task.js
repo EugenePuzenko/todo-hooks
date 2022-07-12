@@ -1,51 +1,41 @@
-import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
 import CheckBox from './check-box';
 import Label from './label';
 
-export default class Task extends React.Component {
-  static propTypes = {
-    message: PropTypes.string,
-    done: PropTypes.bool,
-  };
+const Task = ({ message, done, onDeleted, onToggleDone, onEdit, createdTime, timer, onStartClick, onStopClick }) => {
+  const isCompletedClass = classNames({
+    ' ': !done,
+    ' completed': done,
+  });
 
-  static defaultProps = {
-    onEdit: () => {},
-    onDeleted: () => {},
-  };
+  return (
+    <li className={isCompletedClass}>
+      <div className="view">
+        <CheckBox onToggleDone={onToggleDone} isChecked={done ? true : false} />
+        <Label
+          message={message}
+          timer={timer}
+          createdTime={createdTime}
+          onStartClick={onStartClick}
+          onStopClick={onStopClick}
+        />
+        <button className="icon icon-edit" onClick={onEdit} />
+        <button className="icon icon-destroy" onClick={onDeleted} />
+      </div>
+    </li>
+  );
+};
 
-  render() {
-    const { message, done, onDeleted, onToggleDone, onEdit, createdTime, timer, id, edit, onStartClick, onStopClick } =
-      this.props;
-    const task = JSON.parse(localStorage.getItem('todos'))[
-      JSON.parse(localStorage.getItem('todos')).findIndex((el) => el.id === id)
-    ];
-    const isCompletedClass = classNames({
-      ' ': !done,
-      ' completed': done,
-    });
+Task.propTypes = {
+  message: PropTypes.string,
+  done: PropTypes.bool,
+};
 
-    return (
-      <li className={isCompletedClass}>
-        <div className="view">
-          <CheckBox onToggleDone={onToggleDone} isChecked={done ? true : false} />
-          <Label
-            message={message}
-            timer={timer}
-            createdTime={createdTime}
-            id={id}
-            task={task}
-            done={done}
-            edit={edit}
-            onStartClick={onStartClick}
-            onStopClick={onStopClick}
-          />
-          <button className="icon icon-edit" onClick={onEdit} />
-          <button className="icon icon-destroy" onClick={onDeleted} />
-        </div>
-      </li>
-    );
-  }
-}
+Task.defaultProps = {
+  onEdit: () => {},
+  onDeleted: () => {},
+};
+
+export default Task;

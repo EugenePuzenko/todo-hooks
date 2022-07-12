@@ -1,278 +1,207 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
 import Header from '../header/header';
 import Main from '../main/main';
-import { ACTIONS, getCurrentTime } from '../helpers/actions';
+import { ACTIONS, getCurrentTime, storage } from '../helpers/actions';
 
-export default class App extends React.Component {
-  state = {
-    tasksList: JSON.parse(localStorage.getItem('todos')) ? JSON.parse(localStorage.getItem('todos')) : [],
+const App = () => {
+  const [tasksList, setTasksList] = useState(storage);
+  const [filterType, setFilterType] = useState(ACTIONS.ALL);
+  const [tabList, setTabList] = useState([
+    { id: uuidv4(), name: ACTIONS.ALL, selected: true },
+    { id: uuidv4(), name: ACTIONS.ACTIVE, selected: false },
+    { id: uuidv4(), name: ACTIONS.COMPLETED, selected: false },
+  ]);
 
-    filterType: ACTIONS.ALL,
+  useEffect(() => {
+    localStorage.setItem('todos', JSON.stringify(tasksList));
+    window.addEventListener('beforeunload', () => {
+      setTasksList(tasksList.map((task) => (task.runningTimer = false)));
+      localStorage.setItem('todos', JSON.stringify(tasksList));
+    });
+  }, [tasksList]);
 
-    tabList: [
-      { id: uuidv4(), name: ACTIONS.ALL, selected: true },
-      { id: uuidv4(), name: ACTIONS.ACTIVE, selected: false },
-      { id: uuidv4(), name: ACTIONS.COMPLETED, selected: false },
-    ],
+  const calculateTimer = (id, timerType) => {
+    let timerId = setInterval(() => {
+      setTasksList((prev) => {
+        const index = prev.findIndex((el) => el.id === id);
+        let time = prev[index].timer.split(':');
+        let min = +time[0];
+        let sec = +time[1];
+        if (timerType === 'increase') {
+          sec += 1;
+          if (sec === 60) {
+            min += 1;
+            sec = 0;
+          }
+        }
+
+        if (timerType === 'decrease') {
+          if (min <= 0 && sec <= 0) {
+            clearInterval(tasksList[index].timerId);
+            min = 0;
+            sec = 0;
+          } else {
+            if (sec >= 1) {
+              sec -= 1;
+            } else {
+              sec = 59;
+            }
+            if (sec === 59) {
+              min -= 1;
+            }
+          }
+        }
+
+        return [
+          ...prev.slice(0, index),
+          { ...prev[index], timer: min + ':' + sec, runningTimer: true, timerId },
+          ...prev.slice(index + 1),
+        ];
+      });
+    }, 1000);
   };
 
-  componentDidMount() {
-    window.addEventListener('beforeunload', (event) => {
-      event.preventDefault();
-
-      this.setState(({ tasksList }) => {
-        return {
-          tasksList: tasksList.map((task) => ({ ...task, runningTimer: false })),
-        };
-      });
-    });
-  }
-
-  calculateTimer(id, timerType) {
-    this.setState(({ tasksList }) => {
-      const index = tasksList.findIndex((el) => el.id === id);
-      let time = tasksList[index].timer.split(':');
-      let min = +time[0];
-      let sec = +time[1];
-
-      if (timerType === 'increase') {
-        sec += 1;
-        if (sec === 60) {
-          min += 1;
-          sec = 0;
-        }
-      }
-
-      if (timerType === 'decrease') {
-        if (min <= 0 && sec <= 0) {
-          clearInterval(this.decreaseTimerID);
-          min = 0;
-          sec = 0;
-        } else {
-          if (sec >= 1) {
-            sec -= 1;
-          } else {
-            sec = 59;
-          }
-          if (sec === 59) {
-            min -= 1;
-          }
-        }
-      }
-
-      return {
-        tasksList: [
-          ...tasksList.slice(0, index),
-          { ...tasksList[index], timer: min + ':' + sec },
-          ...tasksList.slice(index + 1),
-        ],
-      };
-    });
-  }
-
-  onStartClick = (id) => {
-    const { tasksList } = this.state;
+  const onStartClick = (id) => {
     const index = tasksList.findIndex((el) => el.id === id);
     const { timerType, runningTimer } = tasksList[index];
 
     if (!runningTimer) {
-      if (timerType === 'increase') {
-        this.saveTimerId(id, timerType, index);
-      }
-
-      if (timerType === 'decrease') {
-        this.saveTimerId(id, timerType, index);
-      }
+      calculateTimer(id, timerType);
     }
-
-    this.setState(({ tasksList }) => {
-      return {
-        tasksList: [
-          ...tasksList.slice(0, index),
-          { ...tasksList[index], runningTimer: true },
-          ...tasksList.slice(index + 1),
-        ],
-      };
-    });
   };
 
-  saveTimerId = (id, timerType, index) => {
-    const timerId = setInterval(() => this.calculateTimer(id, timerType), 1000);
-    this.setState(({ tasksList }) => {
-      return {
-        tasksList: [...tasksList.slice(0, index), { ...tasksList[index], timerId }, ...tasksList.slice(index + 1)],
-      };
-    });
-  };
-
-  onStopClick = (id) => {
-    const { tasksList } = this.state;
+  const onStopClick = (id) => {
     const index = tasksList.findIndex((el) => el.id === id);
-
-    clearInterval(tasksList[index].timerId);
-
-    this.setState(({ tasksList }) => {
-      return {
-        tasksList: [
-          ...tasksList.slice(0, index),
-          { ...tasksList[index], runningTimer: false },
-          ...tasksList.slice(index + 1),
-        ],
-      };
-    });
+    const { timerId } = tasksList[index];
+    clearInterval(timerId);
+    setTasksList([
+      ...tasksList.slice(0, index),
+      { ...tasksList[index], runningTimer: false },
+      ...tasksList.slice(index + 1),
+    ]);
   };
 
-  deleteTask = (id) => {
-    this.onStopClick(id);
-    this.setState(({ tasksList }) => {
-      return {
-        tasksList: tasksList.filter((el) => el.id !== id),
-      };
-    });
+  const deleteTask = (id) => {
+    onStopClick(id);
+    setTasksList(tasksList.filter((el) => el.id !== id));
   };
 
-  addTask = (inputText, timer, timerType) => {
-    this.setState(({ tasksList }) => {
-      if (inputText) {
-        return {
-          tasksList: [
-            {
-              id: uuidv4(),
-              message: inputText,
-              done: false,
-              edit: false,
-              createdTime: getCurrentTime(),
-              timer,
-              timerType,
-              timerId: 0,
-              runningTimer: false,
-            },
-            ...tasksList,
-          ],
-        };
-      } else return;
-    });
+  const addTask = (inputText, timer, timerType) => {
+    if (inputText) {
+      setTasksList([
+        {
+          id: uuidv4(),
+          message: inputText,
+          done: false,
+          edit: false,
+          createdTime: getCurrentTime(),
+          timer,
+          timerType,
+          timerId: 0,
+          runningTimer: false,
+        },
+        ...tasksList,
+      ]);
+    } else return;
   };
 
-  onToggleDone = (id) => {
-    this.onStopClick(id);
-    this.setState(({ tasksList }) => {
-      const index = tasksList.findIndex((el) => el.id === id);
-      return {
-        tasksList: [
-          ...tasksList.slice(0, index),
-          { ...tasksList[index], done: !tasksList[index].done },
-          ...tasksList.slice(index + 1),
-        ],
-      };
-    });
+  const onToggleDone = (id) => {
+    onStopClick(id);
+    const index = tasksList.findIndex((el) => el.id === id);
+    setTasksList([
+      ...tasksList.slice(0, index),
+      { ...tasksList[index], done: !tasksList[index].done, runningTimer: false },
+      ...tasksList.slice(index + 1),
+    ]);
   };
 
-  clearСompleted = () => {
-    this.setState(({ tasksList }) => {
-      return {
-        tasksList: tasksList.filter((el) => el.done === false),
-      };
-    });
+  const clearСompleted = () => {
+    setTasksList(tasksList.filter((el) => el.done === false));
   };
 
-  onToggleTab = (id) => {
-    this.setState(({ tabList }) => {
-      tabList.map((el) => (el.selected = false));
-      const index = tabList.findIndex((el) => el.id === id);
-      return {
-        tabList: [
-          ...tabList.slice(0, index),
-          { ...tabList[index], selected: !tabList[index].selected },
-          ...tabList.slice(index + 1),
-        ],
-      };
-    });
+  const onToggleTab = (id) => {
+    tabList.map((el) => (el.selected = false));
+    const index = tabList.findIndex((el) => el.id === id);
+
+    setTabList([
+      ...tabList.slice(0, index),
+      { ...tabList[index], selected: !tabList[index].selected },
+      ...tabList.slice(index + 1),
+    ]);
   };
 
-  filterFunc = (filterName) => {
-    this.setState({ filterType: filterName });
+  const filterFunc = (filterName) => {
+    setFilterType(filterName);
   };
 
-  getCurrentFilter = () => {
-    if (this.state.filterType === ACTIONS.ALL) {
-      return this.state.tasksList;
+  const getCurrentFilter = () => {
+    if (filterType === ACTIONS.ALL) {
+      return tasksList;
     }
-    if (this.state.filterType === ACTIONS.ACTIVE) {
-      return this.state.tasksList.filter((el) => !el.done);
+    if (filterType === ACTIONS.ACTIVE) {
+      return tasksList.filter((el) => !el.done);
     }
-    if (this.state.filterType === ACTIONS.COMPLETED) {
-      return this.state.tasksList.filter((el) => el.done);
+    if (filterType === ACTIONS.COMPLETED) {
+      return tasksList.filter((el) => el.done);
     }
   };
 
-  onEdit = (id) => {
-    this.setState(({ tasksList }) => {
-      const index = tasksList.findIndex((el) => el.id === id);
-      return {
-        tasksList: [
-          ...tasksList.slice(0, index),
-          { ...tasksList[index], edit: !tasksList[index].edit },
-          ...tasksList.slice(index + 1),
-        ],
-      };
-    });
+  const onEdit = (id) => {
+    const index = tasksList.findIndex((el) => el.id === id);
+    setTasksList([
+      ...tasksList.slice(0, index),
+      { ...tasksList[index], edit: !tasksList[index].edit },
+      ...tasksList.slice(index + 1),
+    ]);
   };
 
-  onEditInput = (id, e) => {
-    this.setState(({ tasksList }) => {
-      const index = tasksList.findIndex((el) => el.id === id);
-      return {
-        tasksList: [
-          ...tasksList.slice(0, index),
-          { ...tasksList[index], message: e.target.value },
-          ...tasksList.slice(index + 1),
-        ],
-      };
-    });
+  const onEditInput = (id, e) => {
+    const index = tasksList.findIndex((el) => el.id === id);
+    setTasksList([
+      ...tasksList.slice(0, index),
+      { ...tasksList[index], message: e.target.value },
+      ...tasksList.slice(index + 1),
+    ]);
   };
 
-  onSubmitEdit = (id, e) => {
+  const onSubmitEdit = (id, e) => {
     e.preventDefault();
-    this.setState(({ tasksList }) => {
-      const index = tasksList.findIndex((el) => el.id === id);
-      return {
-        tasksList: [
-          ...tasksList.slice(0, index),
-          { ...tasksList[index], message: e.target[0].value, edit: !tasksList[index].edit },
-          ...tasksList.slice(index + 1),
-        ],
-      };
-    });
+    const index = tasksList.findIndex((el) => el.id === id);
+    setTasksList([
+      ...tasksList.slice(0, index),
+      { ...tasksList[index], message: e.target[0].value, edit: !tasksList[index].edit },
+      ...tasksList.slice(index + 1),
+    ]);
   };
 
-  getCount = () => {
-    return this.state.tasksList.filter((el) => !el.done).length;
+  const getCount = () => {
+    return tasksList.filter((el) => !el.done).length;
   };
 
-  render() {
-    const todoCount = this.getCount();
-    return (
-      <section className="todoapp">
-        <Header onAddTask={this.addTask} />
-        <Main
-          onDeleted={this.deleteTask}
-          onToggleDone={this.onToggleDone}
-          todoCount={todoCount}
-          clearСompleted={this.clearСompleted}
-          onToggleTab={this.onToggleTab}
-          tabList={this.state.tabList}
-          filterFunc={this.filterFunc}
-          getCurrentFilter={this.getCurrentFilter}
-          onEdit={this.onEdit}
-          onEditInput={this.onEditInput}
-          onSubmitEdit={this.onSubmitEdit}
-          onStartClick={this.onStartClick}
-          onStopClick={this.onStopClick}
-        />
-      </section>
-    );
-  }
-}
+  const todoCount = getCount();
+
+  return (
+    <section className="todoapp">
+      <Header onAddTask={addTask} />
+      <Main
+        onDeleted={deleteTask}
+        onToggleDone={onToggleDone}
+        todoCount={todoCount}
+        clearСompleted={clearСompleted}
+        onToggleTab={onToggleTab}
+        tabList={tabList}
+        filterFunc={filterFunc}
+        getCurrentFilter={getCurrentFilter}
+        onEdit={onEdit}
+        onEditInput={onEditInput}
+        onSubmitEdit={onSubmitEdit}
+        onStartClick={onStartClick}
+        onStopClick={onStopClick}
+      />
+    </section>
+  );
+};
+
+export default App;

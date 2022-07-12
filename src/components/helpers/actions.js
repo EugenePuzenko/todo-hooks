@@ -14,6 +14,15 @@ export const getCurrentTime = () => {
   return new Date().getTime();
 };
 
+const getStorage = () => {
+  localStorage.setItem('todos', JSON.stringify([]));
+  return JSON.parse(localStorage.getItem('todos'));
+};
+
+export const storage = JSON.parse(localStorage.getItem('todos'))
+  ? JSON.parse(localStorage.getItem('todos'))
+  : getStorage;
+
 export const formatTimer = (timer) => {
   const time = timer.split(':');
   let min = +time[0];
