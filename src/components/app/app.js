@@ -54,11 +54,7 @@ const App = () => {
           }
         }
 
-        return [
-          ...prev.slice(0, index),
-          { ...prev[index], timer: min + ':' + sec, runningTimer: true, timerId },
-          ...prev.slice(index + 1),
-        ];
+        return [...prev.slice(0, index), { ...prev[index], timer: min + ':' + sec, timerId }, ...prev.slice(index + 1)];
       });
     }, 1000);
   };
@@ -70,6 +66,12 @@ const App = () => {
     if (!runningTimer) {
       calculateTimer(id, timerType);
     }
+
+    return setTasksList([
+      ...tasksList.slice(0, index),
+      { ...tasksList[index], runningTimer: true },
+      ...tasksList.slice(index + 1),
+    ]);
   };
 
   const onStopClick = (id) => {
